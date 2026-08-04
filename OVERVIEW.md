@@ -20,7 +20,7 @@ The system uses a **Deep Neural Network** built with TensorFlow/Keras:
 
 * **Pattern Extraction:** The 6 price deltas pass through multiple dense layers ($32 \rightarrow 16 \rightarrow 4 \rightarrow 16$ neurons) that extract complex, non-linear relationships in price movement.
 * **Noise Reduction:** Techniques like **Dropout** and **L2 Regularization** are used during training so the network learns true underlying patterns rather than memorizing random market noise.
-* **Custom Risk Weighting:** The model was trained with a custom loss function ($w = 2.5$ for downward moves vs $1.0$ for upward moves). This forces the model to be extra cautious and heavily penalize false postives to prevent loss of investments on the contrary to missed opportunities.
+* **Custom Risk Weighting:** The model was trained with a custom loss function with a heavier weighting towards negative results. This forces the model to be extra cautious and heavily penalize false positives to prevent loss of investments on the contrary to missed opportunities.
 
 
 ## 3. The Output: How Does It Make a Call?
