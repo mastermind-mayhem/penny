@@ -1,3 +1,9 @@
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"   # 0=all, 1=info, 2=warning, 3=error only
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # disable oneDNN messages (optional)
+
+import requests
+import matplotlib.pyplot as plt
 import yfinance as yf
 import tensorflow as tf
 
@@ -9,23 +15,143 @@ def weighted_binary_crossentropy(y_true, y_pred, weight=1.0):
     bce = - (weight * y_true * tf.math.log(y_pred) + (1 - y_true) * tf.math.log(1 - y_pred))
     return tf.reduce_mean(bce, axis=-1)
 
-ticker = yf.Ticker("swtsx")
+# ticker = yf.Ticker('aapl')
 
+ticker = yf.Ticker(input('Enter the stock ticker symbol: '))
 # Fetch historical closes_s for the last 14 days to ensure 7 trading days
-df = ticker.history(period="14d")
-closes = df["Close"].tail(7).tolist()
-closes_s = []
-for i in range(len(closes)-1):
-    closes_s.append((closes[i]-closes[i+1])/closes[i+1])
+df = ticker.history(period="28d")
+timestamps = (df.index[-7:]).tolist()
+dates = [ts.strftime('%m/%d') for ts in timestamps]
+# print(f"Fetched last 7 dates for {ticker.info['symbol']}: {dates}")
+df["Close"] = df["Close"].round(2)
+closes = df["Close"].tail(13).tolist()
+print(f"Fetched last 7 closes_s for {ticker.info['symbol']}: {closes}")
 
-# Load the TensorFlow model
+input_prices = []
+for i in range(7):
+    input_prices.append(list(reversed(closes[i:i+7])))
+input_prices = list(reversed(input_prices))
+
+input_per = []
+for day in input_prices:
+    xs = []
+    for i in range(len(day)-1):
+        xs.append((day[i]-day[i+1])/day[i+1])
+    print(xs)
+    input_per.append(xs)
+
+# closes_week = []
+# for i in range(7):
+#     closes_week.append(closes[i:i+7])
+# # print(f"7-day closes_s: {closes_week}")
+
+# def toPercent(inputs):
+#     closes_s = []
+#     lasts = []
+#     for inp in inputs:
+#         xs = []
+#         for i in range(len(inp)-1):
+#             xs.append((inp[i]-inp[i+1])/inp[i+1])
+#             if i ==len(inp)-2:
+#                 lasts.append((inp[i+1]-inp[i])/inp[i])
+#         closes_s.append(xs)
+#     return closes_s, lasts
+
+# closes_s, percents = toPercent(closes_week)
+# print(closes_s[-1])
+
+ # Load the TensorFlow model
 model = tf.keras.models.load_model('penny.keras')
+predictions = []
+for x in input_per:
+    # Convert normalized list to a TensorFlow tensor
+    input_data = tf.convert_to_tensor([x], dtype=tf.float32)
 
-# Convert normalized list to a TensorFlow tensor
-input_data = tf.convert_to_tensor([closes_s], dtype=tf.float32)
-
-# Run the model to get predictions
-predictions = model.predict(input_data)
+    # Run the model to get predictions
+    predictions.append(model.predict(input_data).flatten()[0])
 
 # Print the predictions
+predictions = list(reversed(predictions))
 print(predictions)
+# Define your ntfy topic name
+TOPIC_NAME = "penny_stock_alerts_98432"
+NTFY_URL = f"https://ntfy.sh/{TOPIC_NAME}"
+
+def create_chart(filename="dummy_chart.png"):
+    """
+    Generates a dark-themed sample line chart with 6 data points.
+    """
+    prices = closes[6:]
+
+    plt.style.use('dark_background')
+    fig, ax = plt.subplots(figsize=(8, 4), dpi=150)
+    
+    # Plot line and markers
+    ax.plot(dates, prices, marker='o', color='#00E676', linewidth=2.5, markersize=6)
+    
+    # Chart styling
+    ax.set_title("Model Confidence & Stock Variation", fontsize=11, pad=12)
+    ax.set_ylabel("Price ($)", fontsize=9)
+    ax.grid(True, linestyle='--', alpha=0.3)
+
+
+    # Annotate price values on chart points
+    for i, prediction in enumerate(predictions):
+        ax.annotate(f"{prediction * 100:.2f}%", (dates[i], prices[i]), 
+                    textcoords="offset points", xytext=(1, 8), 
+                    ha='center', fontsize=8)
+    # for i, percent in enumerate(percents):
+    #     ax.annotate(f"{percent * 100:.2f}%", (dates[i], prices[i]), 
+    #                 textcoords="offset points", xytext=(1, -8), 
+    #                 ha='center', fontsize=8)
+
+    plt.tight_layout()
+    plt.savefig(filename, facecolor=fig.get_facecolor(), edgecolor='none')
+    plt.close()
+    return filename
+
+def send_test_notification():
+    """
+    Generates chart and pushes it as an attachment via ntfy.sh
+    """
+    chart_filepath = create_chart()
+
+    # Define notification metadata without emojis
+    headers = {
+        "Title": "BUY SIGNAL: DEMO at $105.00",
+        "Priority": "high",
+        "Filename": "price_trend.png"
+    }
+
+    # Define notification text
+    message = (
+        f"Model Confidence: {predictions[-1] * 100:.2f}%\n"
+        f"Latest Price: {closes[-1]:.2f}\n"
+        "Threshold Trigger: 0.65\n\n"
+    )
+    print(message)
+
+    print(f"Sending test notification with chart to topic '{TOPIC_NAME}'...")
+    
+    # try:
+    #     # POST image file to ntfy endpoint with message params
+    #     with open(chart_filepath, "rb") as image_file:
+    #         response = requests.post(
+    #             NTFY_URL,
+    #             data=image_file,
+    #             headers=headers,
+    #             params={"message": message}
+    #         )
+
+    #     if response.status_code == 200:
+    #         print("SUCCESS: Notification sent successfully.")
+    #     else:
+    #         print(f"ERROR: Failed to send notification. Status: {response.status_code} - {response.text}")
+
+    # finally:
+    #     # Clean up local temporary file
+    #     if os.path.exists(chart_filepath):
+    #         os.remove(chart_filepath)
+
+if __name__ == "__main__":
+    send_test_notification()

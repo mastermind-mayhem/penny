@@ -1,4 +1,5 @@
 makemodel.py
-penny.keras
+*.keras
 train.csv
 phases/
+test.py

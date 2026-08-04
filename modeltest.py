@@ -21,7 +21,7 @@ model = tf.keras.models.load_model('penny.keras')
 # Column 1 (idx 0): Stock Price
 # Columns 2-7 (idx 1:7): Model Inputs
 # Column 8 (idx 7): Model Outputs / Actual Label
-df = pd.read_csv('test.csv', header=None)
+df = pd.read_csv('data/test.csv', header=None)
 print(f"✅ Loaded test dataset with shape: {df.shape}")
 # Invert the rows in the CSV file
 df = df.iloc[::-1].reset_index(drop=True)
@@ -31,7 +31,7 @@ X_test = df.iloc[:, 1:7].to_numpy()
 y_actual = df.iloc[:, 7].to_numpy()
 
 # Run batch predictions
-cutoff = 0.65
+cutoff = 0.40
 raw_predictions = model.predict(X_test, verbose=0).flatten()
 # Scale predictions to range [0, 1]
 if raw_predictions.max() != raw_predictions.min():
@@ -48,7 +48,7 @@ output_df = pd.DataFrame({
 
 
 # Export stock prices and predictions to a CSV file
-output_df.to_csv('predictions_output.csv', index=False)
+output_df.to_csv('data/predictions_output.csv', index=False)
 print("✅ Predictions exported to 'predictions_output.csv'")
 # Add a column for the stock price related to the prediction
 output_df['StockPrice'] = df.iloc[:, 0]
