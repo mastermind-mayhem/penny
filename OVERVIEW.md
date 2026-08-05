@@ -54,3 +54,7 @@ Using the advice the model (Penny) created. We implemented a test investment whe
 |Total Invested| $4,000.00 | $4,000.00|
 |Current Value| $4,585.40 | $4,456.68 |
 | Gain | $585.40 | $456.68 |
+| Total Investments | 19 | 50 |
+|Investments w/ Loss| 3 | 7 |
+| Avg. Investment | $210.53 | $80.00 |
+| Estimated Yearly Interest | 33.36% | 26.51% |
