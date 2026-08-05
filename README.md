@@ -1,7 +1,7 @@
 # Penny Investment Manager
 ## Training, Validation, and Implementation
 
-This repository provides the backbone for the Penny Investment Management code. Included is the scripts to train (hidden for you suckers), validate and test edge cases, and then implement into usage.
+This repository provides the backbone for the Penny Investment Management code. Included is the scripts to train, validate and test edge cases, and then implement into usage.
 
 ---
 
