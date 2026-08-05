@@ -31,7 +31,7 @@ X_test = df.iloc[:, 1:7].to_numpy()
 y_actual = df.iloc[:, 7].to_numpy()
 
 # Run batch predictions
-cutoff = 0.40
+cutoff = 0.65
 raw_predictions = model.predict(X_test, verbose=0).flatten()
 # Scale predictions to range [0, 1]
 if raw_predictions.max() != raw_predictions.min():
