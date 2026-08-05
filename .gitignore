@@ -1,5 +1,0 @@
-makemodel.py
-*.keras
-train.csv
-phases/
-test.py

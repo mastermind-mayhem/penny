@@ -2,6 +2,7 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"   # 0=all, 1=info, 2=warning, 3=error only
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # disable oneDNN messages (optional)
 
+import configparser
 import requests
 import matplotlib.pyplot as plt
 import yfinance as yf
@@ -15,7 +16,21 @@ def weighted_binary_crossentropy(y_true, y_pred, weight=1.0):
     bce = - (weight * y_true * tf.math.log(y_pred) + (1 - y_true) * tf.math.log(1 - y_pred))
     return tf.reduce_mean(bce, axis=-1)
 
-# ticker = yf.Ticker('aapl')
+# Initialize parser
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+# --- Access Single Configuration Values ---
+MODEL_PATH = config.get('CONFIGURE', 'MODEL_PATH')
+LIVE_DAYS = config.getint('DATA', 'LIVE_DATA_DAYS')
+DECISION_THRESHOLD = config.getfloat('EVALUATION', 'DECISION_THRESHOLD')
+
+# --- Parse Multiple Tickers into a List ---
+raw_tickers = config.get('DATA', 'TICKERS')
+# Split by comma and strip whitespace from each ticker
+TICKERS = [ticker.strip().upper() for ticker in raw_tickers.split(',') if ticker.strip()]
+
+print(f"Loaded {len(TICKERS)} tickers: {TICKERS}")
 
 ticker = yf.Ticker(input('Enter the stock ticker symbol: '))
 # Fetch historical closes_s for the last 14 days to ensure 7 trading days
@@ -30,38 +45,24 @@ print(f"Fetched last 7 closes_s for {ticker.info['symbol']}: {closes}")
 input_prices = []
 for i in range(7):
     input_prices.append(list(reversed(closes[i:i+7])))
+    print(input_prices[-1])
 input_prices = list(reversed(input_prices))
-
 input_per = []
+percents = []
 for day in input_prices:
     xs = []
+    first = True
     for i in range(len(day)-1):
+        if first:
+            first = False
+            percents.append((day[i]-day[i+1])/day[i+1])
         xs.append((day[i]-day[i+1])/day[i+1])
     print(xs)
     input_per.append(xs)
-
-# closes_week = []
-# for i in range(7):
-#     closes_week.append(closes[i:i+7])
-# # print(f"7-day closes_s: {closes_week}")
-
-# def toPercent(inputs):
-#     closes_s = []
-#     lasts = []
-#     for inp in inputs:
-#         xs = []
-#         for i in range(len(inp)-1):
-#             xs.append((inp[i]-inp[i+1])/inp[i+1])
-#             if i ==len(inp)-2:
-#                 lasts.append((inp[i+1]-inp[i])/inp[i])
-#         closes_s.append(xs)
-#     return closes_s, lasts
-
-# closes_s, percents = toPercent(closes_week)
-# print(closes_s[-1])
+percents = list(reversed(percents))
 
  # Load the TensorFlow model
-model = tf.keras.models.load_model('penny.keras')
+model = tf.keras.models.load_model(MODEL_PATH)
 predictions = []
 for x in input_per:
     # Convert normalized list to a TensorFlow tensor
@@ -100,10 +101,10 @@ def create_chart(filename="dummy_chart.png"):
         ax.annotate(f"{prediction * 100:.2f}%", (dates[i], prices[i]), 
                     textcoords="offset points", xytext=(1, 8), 
                     ha='center', fontsize=8)
-    # for i, percent in enumerate(percents):
-    #     ax.annotate(f"{percent * 100:.2f}%", (dates[i], prices[i]), 
-    #                 textcoords="offset points", xytext=(1, -8), 
-    #                 ha='center', fontsize=8)
+    for i, percent in enumerate(percents):
+        ax.annotate(f"{percent * 100:.2f}%", (dates[i], prices[i]), 
+                    textcoords="offset points", xytext=(1, -8), 
+                    ha='center', fontsize=8)
 
     plt.tight_layout()
     plt.savefig(filename, facecolor=fig.get_facecolor(), edgecolor='none')
