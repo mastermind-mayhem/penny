@@ -42,19 +42,40 @@ See full overview in [this documentation.](./OVERVIEW.md)
 
 ## System Usage & Execution Workflow
 
-### Environment Setup
-Install the necessary analytical and machine learning dependencies:
 
+### Deploying Docker Container
+
+Grab dockerfile and initialize container
 ```bash
-pip install -r requirements.txt
+docker build -t penny_build https://raw.githubusercontent.com/mastermind-mayhem/penny/deploy/Dockerfile
+docker run --name penny -d penny_build
 ```
 
-### Deploying Live Inference Routines (Doesn't work right now)
-
-Schedule the real-time inference engine using a cron job or background runner to perform automated evaluation and dispatch mobile notifications:
+Configure `config.ini` to customize what stocks to watch and what confidence level to have:
 
 ```bash
-{Run Python command here}
+docker exec -it penny bash
+sudo apt-get update
+sudo apt-get install -y nano
+sudo nano /opt/penny/config.ini
+```
+
+### Installing Individually on Linux
+
+Pull the install script from the repository
+```bash
+curl -O https://raw.githubusercontent.com/mastermind-mayhem/penny/deploy/install.sh
+```
+Recognize as a Shell Script and execute
+```bash
+sudo chmod +x install.sh
+sudo ./install.sh
+```
+
+Configure `config.ini` to customize what stocks to watch and what confidence level to have:
+
+```bash
+sudo nano /opt/penny/config.ini
 ```
 
 ## Technical Stack
