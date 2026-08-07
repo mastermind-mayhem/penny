@@ -3,7 +3,8 @@
 #LABEL org.opencontainers.image.description="Executes daily via cron for Penny"
 #LABEL org.opencontainers.image.authors="Dominic Couture"
 
-FROM ubuntu:22.04
+#FROM ubuntu:22.04
+FROM python:3.12-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -18,8 +19,8 @@ WORKDIR /opt/penny
 
 # latest commit on that branch. This is the ONLY clone that happens.
 RUN git clone --depth 1 -b main https://github.com/mastermind-mayhem/penny.git . \
-    && rm -rf .git
-
+    && rm -rf .git \
+    && pip3 install --upgrade pip setuptools wheel
 # Install Python dependencies
 RUN pip3 install -r requirements.txt
 
