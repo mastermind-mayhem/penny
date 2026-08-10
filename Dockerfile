@@ -24,8 +24,4 @@ RUN git clone --depth 1 -b main https://github.com/mastermind-mayhem/penny.git .
 # Install Python dependencies
 RUN pip3 install -r requirements.txt
 
-RUN echo "00 12 * * * python3 /opt/penny/src/use.py >> /var/log/cron.log 2>&1" > /etc/cron.d/penny-cron
-RUN chmod 0644 /etc/cron.d/penny-cron
-RUN touch /var/log/cron.log
-
-CMD cron && tail -f /var/log/cron.log
+CMD ["python", "/opt/penny/src/use.py"]
