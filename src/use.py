@@ -20,7 +20,7 @@ def weighted_binary_crossentropy(y_true, y_pred, weight=1.0):
 
 # Initialize parser
 config = configparser.ConfigParser()
-config.read('./config.ini')
+config.read('opt/penny/src/config.ini')
 
 # --- Access Single Configuration Values ---
 MODEL_PATH = "./penny.keras"
