@@ -42,11 +42,11 @@ The following metrics are based on a randomized sample from a company in S&P500 
 
 | Metric | Value | Description |
 | --- | --- | --- |
-|Correct Predictions | 62.00% | Predicted Correct Growth |
-| False Positives | 15.00% | Predicted Growth, Actually a Loss |
-| False Negatives | 23.00% | Predicted Loss, Actually Grew |
-| Precision | 62.50% | Accuracy of the Predicted Investments (Did it grow?) |
-| Recall | % | Investment Opportunities taken |
+|Correct Predictions | 59.00% | Predicted Correct Growth |
+| False Positives | 6.00% | Predicted Growth, Actually a Loss |
+| False Negatives | 35.00% | Predicted Loss, Actually Grew |
+| Precision | 68.42% | Accuracy of the Predicted Investments (Did it grow?) |
+| Recall | 27.08% | Investment Opportunities taken |
 
 Using the advice the model (Penny) created. We implemented a test investment where we compared Dollar-Cost Averaging (DCA), a very well regarded investment strategy. The following is the results:
 |     | **Penny** | **DCA** |

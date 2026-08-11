@@ -7,6 +7,7 @@ import requests
 import matplotlib.pyplot as plt
 import yfinance as yf
 import tensorflow as tf
+import time, schedule
 #endregion imports
 
 @tf.keras.utils.register_keras_serializable()
@@ -19,16 +20,17 @@ def weighted_binary_crossentropy(y_true, y_pred, weight=1.0):
 
 # Initialize parser
 config = configparser.ConfigParser()
-config.read('./config.ini')
+config.read('/opt/penny/src/config.ini')
 
 # --- Access Single Configuration Values ---
-MODEL_PATH = "./penny.keras"
+MODEL_PATH = "/opt/penny/src/penny.keras"
 LIVE_DAYS = config.getint('DATA', 'LIVE_DATA_DAYS')
 raw_tickers = config.get('DATA', 'TICKERS')
 TICKERS = [ticker.strip().upper() for ticker in raw_tickers.split(',') if ticker.strip()]
 DECISION_THRESHOLD = config.getfloat('EXECUTION', 'DECISION_THRESHOLD')
 DEFAULT_INVESTMENT = config.getfloat('EXECUTION', 'DEFAULT_INVESTMENT')
 TOPIC_NAME = config.get('EXECUTION', 'URL_TOPIC_NAME')
+EXEC_TIME = config.get('EXECUTION', 'ACTIVATION_TIME')
 NTFY_URL = f"https://ntfy.sh/{TOPIC_NAME}"
 
 
@@ -72,18 +74,32 @@ def send_test_notification(predictions, closes, percents, dates, name):
     chart_filepath = create_chart(predictions, closes, percents, dates)
 
     # Define notification metadata without emojis
-    headers = {
-        "Title": f"BUY SIGNAL: {name} at ${closes[-1]:.2f}",
-        "Priority": "high",
-        "Filename": "price_trend.png"
-    }
+    if predictions[-1] >= DECISION_THRESHOLD:
+        headers = {
+            "Title": f"BUY SIGNAL: {name} at ${closes[-1]:.2f}",
+            "Priority": "high",
+            "Filename": "price_trend.png"
+        }
 
-    # Define notification text
-    message = (
-        f"Model Confidence: {predictions[-1] * 100:.2f}%\n"
-        f"Latest Price: {closes[-1]:.2f}\n"
-        "Threshold Trigger: 0.65\n\n"
-    )
+        # Define notification text
+        message = (
+            f"Model Confidence: {predictions[-1] * 100:.2f}%\n"
+            f"Latest Price: {closes[-1]:.2f}\n"
+            f"Threshold Trigger: {DECISION_THRESHOLD*100}%\n\n"
+        )
+    else:
+        headers = {
+            "Title": f"Update: {name} at ${closes[-1]:.2f}",
+            "Priority": "low",
+            "Filename": "price_trend.png"
+        }
+
+        # Define notification text
+        message = (
+            f"Model Confidence: {predictions[-1] * 100:.2f}%\n"
+            f"Latest Price: {closes[-1]:.2f}\n"
+            f"Threshold Trigger: {DECISION_THRESHOLD*100}%\n\n"
+        )
     print(message)
 
     print(f"Sending test notification with chart to topic '{TOPIC_NAME}'...")
@@ -109,6 +125,7 @@ def send_test_notification(predictions, closes, percents, dates, name):
             os.remove(chart_filepath)
 
 def calculate():
+    print(f"Starting calculation at {time.strftime('%Y-%m-%d %H:%M:%S')}")
     for ticker in TICKERS:
         name = ticker
         ticker = yf.Ticker(ticker)
@@ -155,4 +172,9 @@ def calculate():
         send_test_notification(predictions, closes, percents, dates, name)
 
 if __name__ == "__main__":
-    calculate()
+    # Schedule Execution
+    schedule.every().day.at(EXEC_TIME).do(calculate)
+    print("Scheduler is running")
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
