@@ -23,7 +23,7 @@ config = configparser.ConfigParser()
 config.read('/opt/penny/src/config.ini')
 
 # --- Access Single Configuration Values ---
-MODEL_PATH = "./penny.keras"
+MODEL_PATH = "/opt/penny/src/penny.keras"
 LIVE_DAYS = config.getint('DATA', 'LIVE_DATA_DAYS')
 raw_tickers = config.get('DATA', 'TICKERS')
 TICKERS = [ticker.strip().upper() for ticker in raw_tickers.split(',') if ticker.strip()]
