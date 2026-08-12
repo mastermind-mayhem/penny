@@ -1,0 +1,7 @@
+.git
+.gitignore
+.dockerignore
+__pycache__/
+*.py[cod]
+*.log
+test.py
