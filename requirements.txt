@@ -10,3 +10,4 @@ tornado==6.5.8
 typing_extensions==4.15.0
 yfinance==0.2.65
 zipp==3.17.0
+schedule==1.2.2
