@@ -40,6 +40,10 @@ The system uses a **Deep Neural Network** built with TensorFlow/Keras:
 ## 5. Current model metrics
 The following metrics are based on a randomized sample from a company in S&P500 over the span of 100 days, resulting in 100 model predictions. Please note results may vary.
 
+### Confidence Map
+![Confidence Map](./img/Figure_1.png)
+
+### Metrics
 | Metric | Value | Description |
 | --- | --- | --- |
 |Correct Predictions | 59.00% | Predicted Correct Growth |
